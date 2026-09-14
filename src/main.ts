@@ -1,11 +1,20 @@
 import './style.css'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
 import { content, contactInfo, projectRepoUrl, type Lang } from './i18n.ts'
 import { detectInitialTheme, applyTheme, type Theme } from './theme.ts'
-import { initStarfield } from './starfield.ts'
+import { initParticles, refreshParticlesTheme } from './particles.ts'
+import { initTilt } from './tilt.ts'
 
 gsap.registerPlugin(ScrollTrigger)
+
+const lenis = new Lenis()
+lenis.on('scroll', ScrollTrigger.update)
+gsap.ticker.add((time) => {
+  lenis.raf(time * 1000)
+})
+gsap.ticker.lagSmoothing(0)
 
 const LANG_STORAGE_KEY = 'lang'
 
@@ -19,11 +28,28 @@ let lang: Lang = detectInitialLang()
 let theme: Theme = detectInitialTheme()
 
 const app = document.querySelector<HTMLDivElement>('#app')!
-const starfieldCanvas = document.querySelector<HTMLCanvasElement>('#starfield')!
-initStarfield(starfieldCanvas)
+initParticles()
 
 const sunIcon = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="3.5"/><path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M15.6 4.4l-1.4 1.4M5.8 14.2l-1.4 1.4M15.6 15.6l-1.4-1.4M5.8 5.8 4.4 4.4"/></svg>`
 const moonIcon = `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M17.3 12.8A7.6 7.6 0 0 1 7.2 2.7a.6.6 0 0 0-.7-.9A8.8 8.8 0 1 0 18.2 13.5a.6.6 0 0 0-.9-.7"/></svg>`
+
+function splitWords(text: string): string {
+  return text
+    .split(' ')
+    .map((word) => `<span class="word-mask"><span class="word">${word}</span></span>`)
+    .join(' ')
+}
+
+app.addEventListener('click', (e) => {
+  const target = (e.target as HTMLElement).closest('a[href^="#"]')
+  if (!target) return
+  const href = target.getAttribute('href')
+  if (!href || href.length < 2) return
+  const el = document.querySelector(href)
+  if (!el) return
+  e.preventDefault()
+  lenis.scrollTo(el as HTMLElement, { offset: -72 })
+})
 
 function render() {
   const t = content[lang]
@@ -37,12 +63,15 @@ function render() {
           <span class="brand-mark">CS</span>
           ${t.hero.name}
         </a>
-        <ul class="nav-links">
-          <li><a href="#skills">${t.nav.skills}</a></li>
-          <li><a href="#projects">${t.nav.projects}</a></li>
-          <li><a href="#education">${t.nav.education}</a></li>
-          <li><a href="#contact">${t.nav.contact}</a></li>
-        </ul>
+        <div class="nav-wrap">
+          <ul class="nav-links">
+            <li><a href="#skills">${t.nav.skills}</a></li>
+            <li><a href="#projects">${t.nav.projects}</a></li>
+            <li><a href="#education">${t.nav.education}</a></li>
+            <li><a href="#contact">${t.nav.contact}</a></li>
+          </ul>
+          <span class="nav-indicator" aria-hidden="true"></span>
+        </div>
         <div class="header-controls">
           <button id="theme-toggle" type="button" aria-label="Toggle dark mode">${theme === 'dark' ? sunIcon : moonIcon}</button>
           <button id="lang-toggle" type="button" aria-label="Switch language">${t.langToggle}</button>
@@ -51,15 +80,17 @@ function render() {
     </header>
 
     <section id="top" class="hero">
+      <span class="corner-triangle corner-triangle--tl" aria-hidden="true"></span>
+      <span class="corner-triangle corner-triangle--br" aria-hidden="true"></span>
       <div class="hero-content">
-        <h1>${t.hero.heading}</h1>
+        <h1>${splitWords(t.hero.heading)}</h1>
         <p class="intro-text">${t.intro.text}</p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="${contactInfo.cvUrl}" download="Claude_Sonafouo_CV.pdf">
             <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#download-icon"></use></svg>
             ${t.hero.ctaCv}
           </a>
-          <a class="btn btn-ghost" href="#projects">
+          <a class="btn btn-primary" href="#projects">
             ${t.hero.ctaProjects}
             <svg class="icon btn-arrow" role="presentation" aria-hidden="true"><use href="/icons.svg#arrow-right-icon"></use></svg>
           </a>
@@ -141,6 +172,7 @@ function render() {
     </section>
 
     <footer>
+      <span class="corner-triangle corner-triangle--br footer-triangle" aria-hidden="true"></span>
       <p>&copy; ${new Date().getFullYear()} ${t.hero.name}</p>
     </footer>
   `
@@ -148,40 +180,44 @@ function render() {
   document.querySelector<HTMLButtonElement>('#lang-toggle')!.addEventListener('click', () => {
     lang = lang === 'de' ? 'en' : 'de'
     localStorage.setItem(LANG_STORAGE_KEY, lang)
-    render()
+    rerenderWithCrossfade()
   })
 
   document.querySelector<HTMLButtonElement>('#theme-toggle')!.addEventListener('click', () => {
     theme = theme === 'dark' ? 'light' : 'dark'
     applyTheme(theme)
-    render()
+    refreshParticlesTheme()
+    rerenderWithCrossfade()
   })
 
   animate()
 }
 
+function rerenderWithCrossfade() {
+  gsap.to(app, {
+    opacity: 0,
+    duration: 0.18,
+    ease: 'power1.out',
+    onComplete: () => {
+      render()
+      gsap.fromTo(app, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power1.out' })
+    },
+  })
+}
+
 function animate() {
   ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
 
-  gsap.from('#site-header', { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' })
-
-  gsap.from('.hero h1, .hero .intro-text, .hero .hero-actions', {
-    y: 24,
-    opacity: 0,
-    duration: 0.8,
-    stagger: 0.12,
-    delay: 0.1,
-    ease: 'power3.out',
-  })
-
-  gsap.from('.hero-social a', {
-    opacity: 0,
-    x: 12,
-    duration: 0.6,
-    stagger: 0.08,
-    delay: 0.3,
-    ease: 'power2.out',
-  })
+  gsap
+    .timeline({ defaults: { ease: 'power3.out' } })
+    .from('#site-header', { y: -20, opacity: 0, duration: 0.6 })
+    .from('.hero h1 .word', { yPercent: 120, duration: 0.7, stagger: 0.06 }, '-=0.3')
+    .from(
+      '.hero .intro-text, .hero .hero-actions',
+      { y: 24, opacity: 0, duration: 0.8, stagger: 0.15 },
+      '-=0.4',
+    )
+    .from('.hero-social a', { opacity: 0, x: 12, duration: 0.6, stagger: 0.15 }, '-=0.5')
 
   gsap.from('#education > *', {
     scrollTrigger: { trigger: '#education', start: 'top 82%' },
@@ -217,6 +253,68 @@ function animate() {
     duration: 0.5,
     stagger: 0.08,
     ease: 'power2.out',
+  })
+
+  gsap.to('.corner-triangle--tl', {
+    y: 60,
+    ease: 'none',
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
+  })
+
+  gsap.to('.corner-triangle--br', {
+    y: -40,
+    ease: 'none',
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
+  })
+
+  gsap.to('.footer-triangle', {
+    y: -30,
+    ease: 'none',
+    scrollTrigger: { trigger: 'footer', start: 'top bottom', end: 'bottom bottom', scrub: true },
+  })
+
+  initTilt('.project-card')
+  initScrollSpy()
+}
+
+function initScrollSpy() {
+  const indicator = document.querySelector<HTMLElement>('.nav-indicator')
+  if (!indicator) return
+
+  const sections = ['skills', 'projects', 'education', 'contact']
+  const links: Record<string, HTMLAnchorElement | null> = {}
+  for (const id of sections) {
+    links[id] = document.querySelector<HTMLAnchorElement>(`.nav-links a[href="#${id}"]`)
+  }
+
+  function setActive(id: string) {
+    const link = links[id]
+    if (!link) return
+    gsap.to(indicator, {
+      left: link.offsetLeft,
+      width: link.offsetWidth,
+      opacity: 1,
+      duration: 0.4,
+      ease: 'power2.out',
+    })
+  }
+
+  for (const id of sections) {
+    ScrollTrigger.create({
+      trigger: `#${id}`,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => setActive(id),
+      onEnterBack: () => setActive(id),
+    })
+  }
+
+  ScrollTrigger.create({
+    trigger: '#top',
+    start: 'top center',
+    end: 'bottom center',
+    onEnter: () => gsap.to(indicator, { opacity: 0, duration: 0.3 }),
+    onEnterBack: () => gsap.to(indicator, { opacity: 0, duration: 0.3 }),
   })
 }
 
