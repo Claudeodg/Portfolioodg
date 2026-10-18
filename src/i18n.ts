@@ -4,6 +4,8 @@ export interface Project {
   name: string
   description: Record<Lang, string>
   tech: string[]
+  repoUrl?: string
+  demoUrl?: string
 }
 
 export interface Content {
@@ -11,7 +13,7 @@ export interface Content {
   nav: { skills: string; projects: string; education: string; contact: string }
   hero: { name: string; heading: string; ctaProjects: string; ctaCv: string }
   intro: { text: string }
-  skills: { heading: string; items: string[] }
+  skills: { heading: string; groups: { heading: string; items: string[] }[] }
   projects: { heading: string; items: Project[] }
   education: {
     heading: string
@@ -43,22 +45,28 @@ const projects: Project[] = [
   {
     name: 'AzerType',
     description: {
-      de: 'Full-Stack-Webanwendung mit Spring Boot, MySQL und Flask, deployt auf Oracle Cloud.',
-      en: 'Full-stack web application built with Spring Boot, MySQL and Flask, deployed on Oracle Cloud.',
+      de: 'Full-Stack-Webanwendung mit Spring Boot (Backend) und JavaScript (Frontend). Benutzerauthentifizierung über Spring Security, MySQL-Datenbank und Integration der Gemini API zur dynamischen Wortgenerierung.',
+      en: 'Full-stack web application with a Spring Boot backend and JavaScript frontend. User authentication via Spring Security, MySQL database, and Gemini API integration for dynamic word generation.',
     },
-    tech: ['Spring Boot', 'MySQL', 'Flask', 'Oracle Cloud'],
+    tech: ['Spring Boot', 'Spring Security', 'MySQL', 'Gemini API', 'JavaScript'],
   },
   {
-    name: 'ApplyFlow',
+    name: 'BTC/USDT Trading Pipeline',
     description: {
-      de: 'Automatisierte Jobsuche-Pipeline mit n8n, die die Bundesagentur-API, Gemini und Gmail verbindet.',
-      en: 'Automated job-search pipeline built with n8n, connecting the Bundesagentur API, Gemini, and Gmail.',
+      de: 'Echtzeit-Pipeline für Bitcoin-Kursdaten von der Binance-API: stündliche OHLCV-Daten in Neon-PostgreSQL, Transformationen mit dbt (SMA-7, SMA-20 und Kursänderung) und Orchestrierung mit Airflow. Öffentliches Streamlit-Dashboard mit Plotly.',
+      en: 'Real-time Bitcoin price pipeline using Binance hourly OHLCV data, Neon PostgreSQL, dbt transformations (SMA-7, SMA-20 and hourly price change), and Airflow orchestration. Public Streamlit dashboard with Plotly.',
     },
-    tech: ['n8n', 'Bundesagentur API', 'Gemini', 'Gmail API'],
+    tech: ['Python 3.12', 'Airflow 2.9', 'dbt', 'PostgreSQL (Neon)', 'Streamlit', 'Plotly', 'Docker Compose'],
+    repoUrl: 'https://github.com/Claudeodg/trading_pipeline',
+    demoUrl: 'https://trading-sma.streamlit.app',
   },
 ]
 
-const skills = ['Java', 'Kotlin', 'Python', 'TypeScript', 'React', 'Spring Boot', 'SQL']
+const skillItems = {
+  languages: ['Java', 'Kotlin', 'Python', 'JavaScript', 'SQL', 'HTML', 'CSS'],
+  tools: ['Spring Boot', 'JUnit', 'Git', 'GitHub', 'GitLab', 'MySQL', 'Linux'],
+  data: ['NumPy', 'SciPy', 'Pandas', 'Matplotlib', 'Jupyter'],
+}
 
 export const content: Record<Lang, Content> = {
   de: {
@@ -78,7 +86,14 @@ export const content: Record<Lang, Content> = {
     intro: {
       text: 'Software Entwickler mit Sitz in Dortmund — Informatik-Student an der TU Dortmund im letzten Semester. Aktuell arbeite ich an meiner Bachelorarbeit zur akustischen Signalanalyse für die Rattermarken-Erkennung bei Zerspanungsprozessen, betreut von Prof. Wiederkehr und Dr. Finkeldey. Meine Erfahrung reicht von Full-Stack-Webentwicklung bis zu Backend-Services in Kotlin und Java.',
     },
-    skills: { heading: 'Fähigkeiten', items: skills },
+    skills: {
+      heading: 'Fähigkeiten',
+      groups: [
+        { heading: 'Programmiersprachen', items: skillItems.languages },
+        { heading: 'Tools & Technologien', items: skillItems.tools },
+        { heading: 'Data & Signalverarbeitung', items: skillItems.data },
+      ],
+    },
     projects: { heading: 'Projekte', items: projects },
     education: {
       heading: 'Ausbildung',
@@ -111,7 +126,14 @@ export const content: Record<Lang, Content> = {
     intro: {
       text: "Software Developer based in Dortmund — Computer Science student at TU Dortmund in my final semester. I'm currently working on my Bachelor's thesis on audio signal analysis for chatter vibration detection in machining processes, supervised by Prof. Wiederkehr and Dr. Finkeldey. My experience spans full-stack web development and backend services in Kotlin and Java.",
     },
-    skills: { heading: 'Skills', items: skills },
+    skills: {
+      heading: 'Skills',
+      groups: [
+        { heading: 'Languages', items: skillItems.languages },
+        { heading: 'Tools & Technologies', items: skillItems.tools },
+        { heading: 'Data & Signal Processing', items: skillItems.data },
+      ],
+    },
     projects: { heading: 'Projects', items: projects },
     education: {
       heading: 'Education',
@@ -135,7 +157,7 @@ export const contactInfo = {
   githubLabel: 'github.com/Claudeodg',
   linkedin: 'https://linkedin.com/in/claudeodg',
   linkedinLabel: 'linkedin.com/in/claudeodg',
-  cvUrl: '/CV_Sonafouo_26.02.2026.pdf',
+  cvUrl: '/CV_Sonafouo_Claude_se_14_10.pdf',
 }
 
 export function projectRepoUrl(projectName: string): string {

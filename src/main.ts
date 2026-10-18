@@ -5,7 +5,6 @@ import Lenis from 'lenis'
 import { content, contactInfo, projectRepoUrl, type Lang } from './i18n.ts'
 import { detectInitialTheme, applyTheme, type Theme } from './theme.ts'
 import { initParticles, refreshParticlesTheme } from './particles.ts'
-import { initTilt } from './tilt.ts'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -111,9 +110,20 @@ function render() {
 
     <section id="skills">
       <h2>${t.skills.heading}</h2>
-      <ul class="skill-list">
-        ${t.skills.items.map((skill) => `<li class="skill-pill">${skill}</li>`).join('')}
-      </ul>
+      <div class="skill-groups">
+        ${t.skills.groups
+          .map(
+            (group) => `
+          <div class="skill-group">
+            <h3 class="skill-group-title">${group.heading}</h3>
+            <ul class="skill-list">
+              ${group.items.map((skill) => `<li class="skill-pill">${skill}</li>`).join('')}
+            </ul>
+          </div>
+        `,
+          )
+          .join('')}
+      </div>
     </section>
 
     <section id="projects">
@@ -122,16 +132,29 @@ function render() {
         ${t.projects.items
           .map(
             (project) => `
-          <a class="project-card" href="${projectRepoUrl(project.name)}" target="_blank" rel="noreferrer">
+          <article class="project-card">
             <div class="project-card-head">
               <h3>${project.name}</h3>
-              <svg class="button-icon repo-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>
+              <div class="project-card-links">
+                <a href="${project.repoUrl ?? projectRepoUrl(project.name)}" target="_blank" rel="noreferrer" aria-label="${project.name} on GitHub">
+                  <svg class="icon repo-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>
+                </a>
+                ${
+                  project.demoUrl
+                    ? `
+                <a href="${project.demoUrl}" target="_blank" rel="noreferrer" aria-label="${project.name} live demo">
+                  <svg class="icon repo-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#external-link-icon"></use></svg>
+                </a>
+                `
+                    : ''
+                }
+              </div>
             </div>
             <p>${project.description[lang]}</p>
             <ul class="tech-list">
               ${project.tech.map((tech) => `<li class="tech-pill">${tech}</li>`).join('')}
             </ul>
-          </a>
+          </article>
         `,
           )
           .join('')}
@@ -273,7 +296,6 @@ function animate() {
     scrollTrigger: { trigger: 'footer', start: 'top bottom', end: 'bottom bottom', scrub: true },
   })
 
-  initTilt('.project-card')
   initScrollSpy()
 }
 

@@ -435,6 +435,22 @@ section {
   transform: translateX(4px);
 }
 
+.skill-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.skill-group-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
 .skill-list {
   list-style: none;
   display: flex;
@@ -466,7 +482,6 @@ section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
-  perspective: 1200px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -505,13 +520,29 @@ section {
   }
 }
 
+.project-card-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+
+  a {
+    display: flex;
+  }
+}
+
 .repo-icon {
   flex-shrink: 0;
   color: var(--text-h);
   opacity: 0.45;
   transition:
     opacity 0.3s,
-    transform 0.3s;
+    transform 0.3s,
+    color 0.2s;
+
+  &:hover {
+    color: var(--accent);
+  }
 }
 
 .project-card:hover .repo-icon {
